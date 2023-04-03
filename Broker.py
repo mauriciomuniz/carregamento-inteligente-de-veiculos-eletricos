@@ -4,6 +4,7 @@ import disjkstra as dj
 import json
 import variables as vb
 import warshall as ws
+import Eletric_station as es
 
 class BrokerSRV():
     def __init__(self,address, name, port) -> None:
@@ -19,11 +20,17 @@ class BrokerSRV():
         self.client.on_disconnect = self.on_disconnect
         # Conecta-se ao broker MQTT
         self.client.connect(self.broker_address, self.broker_port)
-        
+        self.stations = []
+
+        self.init_station()
         td.Thread(target=self.client.loop_forever).start()
         self.wars = ws.Warshall()
 
-
+    def init_station(self):
+        for p in vb.VERTICES:
+            if("P" in p):
+                self.stations.append(es.EletricStation(p))
+                
 
     # Define a função de callback que será chamada quando uma mensagem for recebida
     def on_message(self, client, userdata, message):
@@ -51,10 +58,18 @@ class BrokerSRV():
         d = []
         for p in vb.VERTICES:
             if("P" in p):
-                f = {"station":p, "dist":self.wars.dis[orig][vb.VERTICES.index(p)], "path_total":self.wars.constructPath(orig, vb.VERTICES.index(p)) }
-                d.append(f)
-        d.sort(key=lambda short: short["dist"])
+                d.append({"station":p, 
+                          "dist_and_queue":((self.wars.dis[orig][vb.VERTICES.index(p)], self.find_station(p))), 
+                          "path_total":self.wars.constructPath(orig, vb.VERTICES.index(p)),
+                        })
+        d.sort(key=lambda short: short["dist_and_queue"])
 
         print("Vá para o posto {} seguindo a rota: {}\nDistância de {}km".format(
-            d[0].get("station"), self.wars.printPath(d[0].get("path_total")), d[0].get("dist")
-        ))      
+            d[0].get("station"), self.wars.printPath(d[0].get("path_total")), d[0].get("dist_and_queue")[0]
+        ))   
+
+    # Retorna a quantidade de v
+    def find_station(self, name):
+        for s in self.stations:
+            if(s.name == name):
+                return s.queue
