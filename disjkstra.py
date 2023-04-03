@@ -4,15 +4,18 @@
  
 # Library for INT_MAX
 import sys
+import random as rd
  
 class Graph():
  
     def __init__(self, vertices):
-        self.vet_str = ['A','B','C']
+        self.vet_str = ['A','B','C','D','E','F','P1','P2','P3']
         self.V = vertices
         self.graph = [[0 for column in range(vertices)]
                       for row in range(vertices)]
- 
+        
+        self.generate_random_num()
+
     def printSolution(self, dist, src):
         print("Vertex -> Distance from Source")
         for node in range(self.V):
@@ -46,7 +49,7 @@ class Graph():
  
         for cout in range(self.V):
  
-            # Pick the minimum distance vertex from
+            # Pick the minimum  distance vertex from
             # the set of vertices not yet processed.
             # u is always equal to src in first iteration
             u = self.minDistance(dist, sptSet)
@@ -64,15 +67,22 @@ class Graph():
                     dist[v] = dist[u] + self.graph[u][v]
  
         self.printSolution(dist, src)
- 
- 
+        
+        # Gerar o números aleatórios para compor a matriz. 
+        # Grafo bi-direcionado.
+    def generate_random_num(self):
+        for i in range(self.V):
+            for j in range(self.V):
+                rand = rd.randint(1,50)
+                self.graph[i][j] = rand
+                self.graph[j][i] = rand
+                if i == j:
+                    self.graph[i][j] = 0
+                  
 # Driver program
-g = Graph(3)
-g.graph = [[0, 5, 2],
-           [5, 0, 8],
-           [2, 8, 0]
-           ]
- 
-g.dijkstra(1)
+#g = Graph(9)
+
+#print(g.graph)
+#g.dijkstra(1)
  
 # This code is contributed by Divyanshu Mehta
