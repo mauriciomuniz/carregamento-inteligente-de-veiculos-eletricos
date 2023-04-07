@@ -63,5 +63,5 @@ class EletricStation():
 
 
 if __name__ == '__main__':
-    client = EletricStation("P1", 'localhost', 1883)
+    client = EletricStation("P3", 'localhost', 1883)
     

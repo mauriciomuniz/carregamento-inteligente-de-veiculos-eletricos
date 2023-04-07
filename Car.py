@@ -41,7 +41,7 @@ class Client():
             if self.battery < 99: 
                 rd.seed(self.seed_rand) # gera o mesmo número por causa da função seed
                 msg = json.dumps({"localizacao":self.random_position()}).encode()
-                self.client.publish("/topico",msg)
+                self.client.publish("/location",msg)
 
             self.decrease_battery(100)
 

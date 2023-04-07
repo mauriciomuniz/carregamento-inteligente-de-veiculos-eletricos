@@ -4,9 +4,10 @@ import disjkstra as dj
 import json
 import variables as vb
 import warshall as ws
-import Eletric_station as es
+#import Eletric_station as es
 
 class BrokerSRV():
+
     def __init__(self,address, name, port) -> None:
         self.client_name = name 
         self.broker_port = port
@@ -20,16 +21,20 @@ class BrokerSRV():
         self.client.on_disconnect = self.on_disconnect
         # Conecta-se ao broker MQTT
         self.client.connect(self.broker_address, self.broker_port)
-        self.stations = []
 
-        self.init_station()
+        self.stations = []
+        self.orig = ''
+        self.list_dis_que = []
+
+        #self.init_station()
         td.Thread(target=self.client.loop_forever).start()
         self.wars = ws.Warshall()
+        
 
-    def init_station(self):
+    '''def init_station(self):
         for p in vb.VERTICES:
             if("P" in p):
-                self.stations.append(es.EletricStation(p))
+                self.stations.append(es.EletricStation(p))'''
                 
 
     # Define a função de callback que será chamada quando uma mensagem for recebida
@@ -37,39 +42,54 @@ class BrokerSRV():
         print("Mensagem recebida no tópico: {}, msg: {}  nível QoS {}".format(message.topic,
                                                                             message.payload.decode(),
                                                                             message.qos))
-        self.response(message.payload.decode())
+        self.select_topic(message)
+        
+
+
+    def select_topic(self, msg):
+        if(msg.topic == "/location"):
+            self.location(msg)
+            self.client.publish("/vagas", "há quantas vagas")
+        if(msg.topic == "/num_vagas"):
+            self.response(msg)
         
     # Define a função de callback que será chamada
     # quando a conexão for estabelecida
     def on_connect(self, client, userdata, flags, rc):
         print("Conexão estabelecida com o código de retorno: {}".format(rc))
         # Inscreve-se em um tópico
-        client.subscribe("/topico")
+        self.client.subscribe("/num_vagas")
+        self.client.subscribe("/location")
+       
 
     # Define a função de callback que será chamada quando a conexão for perdida
     def on_disconnect(self, client, userdata, rc):
         print("Conexão perdida com o código de retorno: {}".format(rc))
 
+    '''
+        Função que recebe a localização do carro
+    '''
+    def location(self,msg):
+        dict_msg = json.loads(msg.payload.decode())
+        self.orig = dict_msg.get('localizacao')
 
-    def response(self,msg):
-        dict_msg = json.loads(msg)
-        orig = dict_msg.get('localizacao')
-       
-        d = []
+
+    def response(self, msg):
+        dict_msg = json.loads(msg.payload.decode())
+        local = dict_msg["name"]
+        dict_msg["dis_que"] = (self.wars.dis[self.orig][vb.VERTICES.index(local)], dict_msg.get("vacancy"))
+        self.list_dis_que.append(dict_msg)
+        del dict_msg["vacancy"]
+
+        if(len(self.list_dis_que) == self.num_station()):
+            self.list_dis_que.sort(key=lambda short: short["dis_que"]) 
+            list_path = self.wars.constructPath(self.orig, vb.VERTICES.index(self.list_dis_que[0].get("name")))
+            print("Vá para o posto {} seguindo a rota: {}\nDistância de {}km".format(
+                self.list_dis_que[0].get("name"), self.wars.printPath(list_path),vb.VERTICES.index(local)))  
+        
+    def num_station(self):
+        i = 0
         for p in vb.VERTICES:
             if("P" in p):
-                d.append({"station":p, 
-                          "dist_and_queue":((self.wars.dis[orig][vb.VERTICES.index(p)], self.find_station(p))), 
-                          "path_total":self.wars.constructPath(orig, vb.VERTICES.index(p)),
-                        })
-        d.sort(key=lambda short: short["dist_and_queue"])
-
-        print("Vá para o posto {} seguindo a rota: {}\nDistância de {}km".format(
-            d[0].get("station"), self.wars.printPath(d[0].get("path_total")), d[0].get("dist_and_queue")[0]
-        ))   
-
-    # Retorna a quantidade de v
-    def find_station(self, name):
-        for s in self.stations:
-            if(s.name == name):
-                return s.queue
+                i+=1
+        return i
