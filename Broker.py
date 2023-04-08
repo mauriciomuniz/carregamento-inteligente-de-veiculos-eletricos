@@ -76,20 +76,36 @@ class BrokerSRV():
     '''
         Falta fazer a parte de verificar se todos os postos tem vagas, ou seja, diferente de 0.
     '''
-
+    
     def response(self, msg):
         dict_msg = json.loads(msg.payload.decode())
         local = dict_msg["name"] 
-        dict_msg["dis_que"] = (self.wars.dis[self.orig][vb.VERTICES.index(local)], dict_msg.get("vacancy")) # Cria uma tupla com a distância e o número de vagas do posto
-        self.list_dis_que.append(dict_msg)
-        del dict_msg["vacancy"]
+        vacancy = dict_msg.get("vacancy")
+        
+        # Verifica se todos os postos possuem vagas
+        for p in self.stations:
+            if p["name"] == local:
+                p["vacancy"] = vacancy
+                break
+        all_vacancies = all([p["vacancy"] != 0 for p in self.stations])
+        
+        if all_vacancies:
+            dict_msg["dis_que"] = (self.wars.dis[self.orig][vb.VERTICES.index(local)], vacancy -1) # Cria uma tupla com a distância e o número de vagas do posto
+            self.list_dis_que.append(dict_msg)
+            del dict_msg["vacancy"]
 
-        if(len(self.list_dis_que) == self.num_station()):
-            self.list_dis_que.sort(key=lambda short: short["dis_que"]) 
-            list_path = self.wars.constructPath(self.orig, vb.VERTICES.index(self.list_dis_que[0].get("name")))
+            if(len(self.list_dis_que) == self.num_station()):   
+                self.list_dis_que.sort(key=lambda short: short["dis_que"]) 
+                list_path = self.wars.constructPath(self.orig, vb.VERTICES.index(self.list_dis_que[0].get("name")))
 
-            print("Vá para o posto {} seguindo a rota: {}\nDistância de {}km".format(
-                self.list_dis_que[0].get("name"), self.wars.printPath(list_path),vb.VERTICES.index(local)))  
+                # Diminui em -1 o número de vagas do posto escolhido
+                for p in self.stations:
+                    if p["name"] == self.list_dis_que[0].get("name"):
+                        p["vacancy"] -= 1
+                        break    
+                
+                print("Vá para o posto {} seguindo a rota: {}\nDistância de {}km".format(
+                    self.list_dis_que[0].get("name"), self.wars.printPath(list_path),vb.VERTICES.index(local)))  
         
     def num_station(self):
         i = 0
