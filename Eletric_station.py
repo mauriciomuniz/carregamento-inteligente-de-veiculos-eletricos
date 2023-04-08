@@ -6,9 +6,9 @@ import json
 
 
 class EletricStation():
-    def __init__(self, name, address, port) -> None:
+    def __init__(self, name, address, port, vacancy=15) -> None:
         self.name = name
-        self.queue = 0
+        self.queue = vacancy
 
         self.broker = address
         self.port = port
@@ -63,5 +63,5 @@ class EletricStation():
 
 
 if __name__ == '__main__':
-    client = EletricStation("P1", 'localhost', 1883)
+    client = EletricStation("P1", 'localhost', 1883, vacancy=15)
     
