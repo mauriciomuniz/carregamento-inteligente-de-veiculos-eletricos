@@ -1,6 +1,5 @@
 import paho.mqtt.client as mqtt
 import threading as td
-import disjkstra as dj
 import json
 import variables as vb
 import warshall as ws
@@ -45,7 +44,6 @@ class BrokerSRV():
         self.select_topic(message)
         
 
-
     def select_topic(self, msg):
         if(msg.topic == "/location"):
             self.location(msg)
@@ -57,9 +55,10 @@ class BrokerSRV():
     # quando a conexão for estabelecida
     def on_connect(self, client, userdata, flags, rc):
         print("Conexão estabelecida com o código de retorno: {}".format(rc))
+
         # Inscreve-se em um tópico
-        self.client.subscribe("/num_vagas")
-        self.client.subscribe("/location")
+        self.client.subscribe("/num_vagas") 
+        self.client.subscribe("/location") # Recebe a localização do carro
        
 
     # Define a função de callback que será chamada quando a conexão for perdida
@@ -74,16 +73,21 @@ class BrokerSRV():
         self.orig = dict_msg.get('localizacao')
 
 
+    '''
+        Falta fazer a parte de verificar se todos os postos tem vagas, ou seja, diferente de 0.
+    '''
+
     def response(self, msg):
         dict_msg = json.loads(msg.payload.decode())
-        local = dict_msg["name"]
-        dict_msg["dis_que"] = (self.wars.dis[self.orig][vb.VERTICES.index(local)], dict_msg.get("vacancy"))
+        local = dict_msg["name"] 
+        dict_msg["dis_que"] = (self.wars.dis[self.orig][vb.VERTICES.index(local)], dict_msg.get("vacancy")) # Cria uma tupla com a distância e o número de vagas do posto
         self.list_dis_que.append(dict_msg)
         del dict_msg["vacancy"]
 
         if(len(self.list_dis_que) == self.num_station()):
             self.list_dis_que.sort(key=lambda short: short["dis_que"]) 
             list_path = self.wars.constructPath(self.orig, vb.VERTICES.index(self.list_dis_que[0].get("name")))
+
             print("Vá para o posto {} seguindo a rota: {}\nDistância de {}km".format(
                 self.list_dis_que[0].get("name"), self.wars.printPath(list_path),vb.VERTICES.index(local)))  
         
