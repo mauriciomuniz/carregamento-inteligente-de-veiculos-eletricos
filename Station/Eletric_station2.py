@@ -6,13 +6,13 @@ import json
 
 
 class EletricStation():
-    def __init__(self, name, address, port) -> None:
+    def __init__(self, name, address, port, vacancy=15) -> None:
         self.name = name
-        self.queue = 0
-
+        self.queue = vacancy
+       
         self.broker = address
         self.port = port
-        self.topic = "/num_vagas"
+        self.topic = "/num_vagas2"
         # generate client ID with pub prefix randomly
         #client_id = f'python-mqtt-{random.randint(0, 1000)}'
         # username = 'emqx'
@@ -27,10 +27,10 @@ class EletricStation():
 
 
     def on_connect(self, client, userdata, flags, rc):
-
         print("Conexão estabelecida com o código de retorno: {}".format(rc))
         # Inscreve-se em um tópico
-        client.subscribe("/vagas")
+        client.subscribe("/vagas2")
+      
 
         
     
@@ -38,13 +38,12 @@ class EletricStation():
         print("Mensagem recebida no tópico: {}, msg: {}  nível QoS {}".format(message.topic,
                                                                             message.payload.decode(),
                                                                             message.qos))
-        if(message.topic == "/vagas"):
+        if(message.topic == "/vagas2"):
             print("vou mandar as minha vagas")
             msg = json.dumps({"name": self.name, "vacancy": self.queue}).encode()
             time.sleep(1)
-            self.client.publish("/num_vagas", msg)
-
-
+            self.client.publish("/num_vagas2", msg)
+       
 
     '''def publish(self):
         msg_count = 0
@@ -63,5 +62,7 @@ class EletricStation():
 
 
 if __name__ == '__main__':
-    client = EletricStation("P2", 'localhost', 1883)
+    client = EletricStation(name="P4", address='localhost', port=1883, vacancy=15)
+    #client = EletricStation(name="P2", address='localhost', port=1883, vacancy=0)
+    #client = EletricStation(name="P3", address='localhost', port=1883, vacancy=0)
     

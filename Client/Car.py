@@ -1,3 +1,7 @@
+
+import sys
+sys.path.insert(1, '../')
+
 import paho.mqtt.client as paho
 import threading
 from time import sleep
@@ -10,23 +14,22 @@ import json
 class Client():
     def __init__(self, name, broker, port, battery=100 ) -> None:
         
-        self.seed_rand = rd.randint(1,20) # Ao criar uma classe gera um número aleatório para por como semente
-        self.id = 'car1' 
-        self.broker = "localhost"
-        self.port = 1883
+        self.seed_rand = rd.randint(1,20) # Ao criar uma classe gera um número aleatório para por como semente da função seed
+        self.id = name
         self.client = paho.Client(name)  # create client object
         self.client.on_publish = self.on_publish  # assign function to callback
-        self.client.connect(self.broker, self.port)
+        self.client.connect(broker, port)
         self.battery = battery  # battery level in percentage
         self.list_p = [] # lista de posições onde o carro poderá estar
         for i in range(1, 7):
             self.list_p.append(chr(64 + i))
 
+        threading.Thread(target=self.send_msg).start()
+
 
     def on_publish(self, client, userdata, result):  # create function for callback
         print("data published \n")
     
-
 
     def decrease_battery(self, distance):
         # diminui 1% por 2km
@@ -35,12 +38,11 @@ class Client():
     
     # Envia a mensagem para o broker, informando que a bateria está baixa.
     def send_msg(self):
-        self.num_stations()
         while True:
             sleep(1)  
             if self.battery < 99: 
                 rd.seed(self.seed_rand) # gera o mesmo número por causa da função seed
-                msg = json.dumps({"localizacao":self.random_position()}).encode()
+                msg = json.dumps({"localizacao":self.random_position(), "request":self.id}).encode()
                 self.client.publish("/location",msg)
 
             self.decrease_battery(100)
@@ -56,3 +58,6 @@ class Client():
             if("P" in p):
                 n+=1
         return n
+    
+
+Client('car1', 'localhost', 1883)
