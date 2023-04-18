@@ -31,7 +31,6 @@ class EletricStation():
         # Inscreve-se em um tópico
         client.subscribe("/vagas")
       
-
         
     
     def on_message(self, client, userdata, message):
@@ -62,7 +61,7 @@ class EletricStation():
 
 
 if __name__ == '__main__':
-    client = EletricStation(name="P1", address='localhost', port=1883, vacancy=0)
+    client = EletricStation(name="P1", address='172.16.103.10', port=50001, vacancy=0)
     #client = EletricStation(name="P2", address='localhost', port=1883, vacancy=0)
     #client = EletricStation(name="P3", address='localhost', port=1883, vacancy=0)
     

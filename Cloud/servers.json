@@ -1,0 +1,19 @@
+[
+    {
+        "name":"server1",
+        "ip": "localhost",
+        "port": 50000
+    },
+    {
+        "name":"server2",
+        "ip": "localhost",
+        "port": 60000
+    },    
+        
+    {
+        "name":"server3",
+        "ip": "localhost",
+        "port": 70000
+    }
+         
+]

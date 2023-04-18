@@ -7,6 +7,8 @@ import json
 import variables as vb
 import Controller.warshall as ws
 import time
+import ServerTCP
+
 
 class BrokerSRV():
 
@@ -32,7 +34,13 @@ class BrokerSRV():
         #self.init_station()
         td.Thread(target=self.client.loop_forever).start()
         self.wars = ws.Warshall()
-    
+        self.server = ServerTCP.ServerFOG("server1",'localhost', 50000)
+        self.server.connect()
+        
+        
+        # SOMENTE PARA TESTES
+        msg =  json.dumps({"name_server":self.server.name,"position_car": self.orig})
+        send_server_central = self.server.send_to_srv_central(msg)
                 
 
     # Define a função de callback que será chamada quando uma mensagem for recebida
@@ -83,7 +91,7 @@ class BrokerSRV():
         self.who_req = dict_msg['request']
         self.id_client = dict_msg.get('id_car')
         
-    # cria um obj json e adiciana em uma lista de postos 
+    # cria um obj json e adiciona em uma lista de postos 
     def receive_stations(self, msg):
         dict_msg = self.dict_msg(msg)
         local = dict_msg["name"] 
@@ -98,8 +106,11 @@ class BrokerSRV():
     def response(self, msg):
     
         if(len(self.stations) == 0 ):
-            msg =  json.dumps({"position_car": self.orig, "id":1}).encode()
-            self.client.publish("/procurar_postos", msg)
+            msg =  json.dumps({"name_server":self.server.name,"position_car": self.orig})
+            # Envia uma mensagem informando o nome do server e a posicao do carro
+            send_server_central = self.server.send_to_srv_central(msg)
+            #response = requestServer.connect(msg)
+            #self.client.publish("/procurar_postos", msg)
         else:
             self.stations.sort(key=lambda short: short["dist_and_queue"]) 
             station_name = self.stations[0].get("station")
@@ -123,36 +134,8 @@ class BrokerSRV():
                      station, self.wars.printPath(path), dist)) 
        
         
-        '''all_vacancies = all([p["vacancy"] != 0 for p in self.stations])
-        
-        if all_vacancies:
-            dict_msg["dis_que"] = (self.wars.dis[self.orig][vb.VERTICES.index(local)], vacancy -1) # Cria uma tupla com a distância e o número de vagas do posto
-            self.list_dis_que.append(dict_msg)
-            del dict_msg["vacancy"]
-
-            if(len(self.list_dis_que) == self.num_station()):   
-                self.list_dis_que.sort(key=lambda short: short["dis_que"]) 
-                list_path = self.wars.constructPath(self.orig, vb.VERTICES.index(self.list_dis_que[0].get("name")))
-
-                # Diminui em -1 o número de vagas do posto escolhido
-                for p in self.stations:
-                    if p["name"] == self.list_dis_que[0].get("name"):
-                        p["vacancy"] -= 1
-                        break    
-                
-                print("Vá para o posto {} seguindo a rota: {}\nDistância de {}km".format(
-                    self.list_dis_que[0].get("name"), self.wars.printPath(list_path),vb.VERTICES.index(local)))  
-        '''
-
-
-
-
-    def num_station(self):
-        i = 0
-        for p in vb.VERTICES:
-            if("P" in p):
-                i+=1
-        return i
+       
+   
 
 
 bk = BrokerSRV('localhost','bk1' ,1883)
