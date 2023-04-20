@@ -9,7 +9,7 @@ import Controller.warshall as ws
 import time
 import ServerTCP
 
-
+# Classe que representa o segundo broker
 class BrokerSRV():
 
     def __init__(self,address, name, port) -> None:
@@ -48,7 +48,11 @@ class BrokerSRV():
                                                                             message.qos))
         self.select_topic(message)
         
-
+    # tópicos a serem selecionados, a depender do tópico faz uma ação
+    # Se o tópico for /location, então ele vai buscar a localização baseada no carro atual e publica no 
+    # topico de /vagas e msg de quantas vagas tem
+    # Se o tópico for /num_vagas, então ele busca o numero de vagas naquele posto
+    # se for /receber_posto, então teremos o posto e a distância até ele
     def select_topic(self, msg):
         if(msg.topic == "/location"):
             self.location(msg)
@@ -89,7 +93,8 @@ class BrokerSRV():
         self.who_req = dict_msg['request']
         self.id_client = dict_msg.get('id_car')
         
-    # cria um obj json e adiciona em uma lista de postos 
+    # recebe as estações com nome, quantidade de vagas, distancia e fila
+    # tbm cria um obj json e adiciona em uma lista de postos por causa do da função dict_msg
     def receive_stations(self, msg):
         dict_msg = self.dict_msg(msg)
         local = dict_msg["name"] 

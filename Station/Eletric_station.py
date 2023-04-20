@@ -4,7 +4,10 @@ import paho.mqtt.client as mqtt_client
 import threading as td
 import json
 
-
+## A classe EletricStation representa um posto de carregamento de veiculos eletricos
+## usa o mqtt para comunicação com outras entidades e inicia com alguns atributos como nome, vagas, portas
+## entre outros
+## thread para que o cliente rode em segundo plano, enquanto outras tarefas sao executadas
 class EletricStation():
     def __init__(self, name, address, port, vacancy=15) -> None:
         self.name = name
@@ -25,7 +28,7 @@ class EletricStation():
         td.Thread(target=self.client.loop_forever).start()
         
 
-
+## métodos de comunicação mqtt para lidar com conexão, mensagem
     def on_connect(self, client, userdata, flags, rc):
         print("Conexão estabelecida com o código de retorno: {}".format(rc))
         # Inscreve-se em um tópico
@@ -59,7 +62,7 @@ class EletricStation():
 
 
 
-
+# inicialização do posto
 if __name__ == '__main__':
     client = EletricStation(name="P1", address='172.16.103.10', port=50001, vacancy=0)
     #client = EletricStation(name="P2", address='localhost', port=1883, vacancy=0)

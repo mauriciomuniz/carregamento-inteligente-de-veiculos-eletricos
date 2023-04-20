@@ -1,6 +1,9 @@
 import socket
 import json
 
+# aqui temos um client tcp para comunicação entre brokers
+# para que possa passar a informação de um broker 
+# para o outro
 class Client_TCP: 
     def __init__(self, host='localhost', port_TCP=5000):
             self.host = host

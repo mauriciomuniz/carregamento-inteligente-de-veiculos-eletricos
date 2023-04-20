@@ -9,7 +9,7 @@ import Controller.warshall as ws
 import time
 import ServerTCP
 
-
+# Classe que representa o primeiro broker
 class BrokerSRV():
 
     def __init__(self,address, name, port) -> None:
@@ -34,6 +34,7 @@ class BrokerSRV():
         #self.init_station()
         td.Thread(target=self.client.loop_forever).start()
         self.wars = ws.Warshall()
+        # servidor tpc criado para interação com outros servidores
         self.server = ServerTCP.ServerFOG("server1",'localhost', 50000)
         self.server.connect()
         
@@ -51,6 +52,11 @@ class BrokerSRV():
         self.select_topic(message)
         
 
+    # tópicos a serem selecionados, a depender do tópico faz uma ação
+    # Se o tópico for /location, então ele vai buscar a localização baseada no carro atual e publica no 
+    # topico de /vagas e msg de quantas vagas tem
+    # Se o tópico for /num_vagas, então ele busca o numero de vagas naquele posto
+    # se for /receber_posto, então teremos o posto e a distância até ele
     def select_topic(self, msg):
         if(msg.topic == "/location"):
             self.location(msg)
@@ -91,7 +97,9 @@ class BrokerSRV():
         self.who_req = dict_msg['request']
         self.id_client = dict_msg.get('id_car')
         
-    # cria um obj json e adiciona em uma lista de postos 
+     
+    # recebe as estações com nome, quantidade de vagas, distancia e fila
+    # tbm cria um obj json e adiciona em uma lista de postos por causa do da função dict_msg
     def receive_stations(self, msg):
         dict_msg = self.dict_msg(msg)
         local = dict_msg["name"] 
@@ -115,6 +123,7 @@ class BrokerSRV():
             self.stations.sort(key=lambda short: short["dist_and_queue"]) 
             station_name = self.stations[0].get("station")
             
+            # lista de caminhos onde recebe a origem e os vertices com o indice de nome das estações
             list_path = self.wars.constructPath(self.orig, vb.VERTICES.index(station_name))
             dist = self.wars.dis[self.orig][vb.VERTICES.index(station_name)]
             if(self.who_req == "server"):
