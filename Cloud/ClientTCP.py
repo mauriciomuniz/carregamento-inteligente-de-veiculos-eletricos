@@ -1,6 +1,7 @@
 import socket
 import json
 
+# codigo responsavel por fazer uma conexão tcp, realizar uma conexão e enviar uma msg codificada
 class Client_TCP: 
     def __init__(self, host='localhost', port_TCP=5000):
             self.host = host

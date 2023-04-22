@@ -2,6 +2,10 @@ import paho.mqtt.client as mqtt_client
 import threading
 import json
 
+'''
+servidor mqtt que é iniciado com um nome, endereço de broker e porta
+é definido dois tópicos para procurar postos e para receber postos
+'''
 class Server():
     def __init__(self, name, address, port) -> None:
         self.name = name
@@ -17,8 +21,10 @@ class Server():
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         threading.Thread(target=self.client.loop_forever).start()
-
-
+    '''
+    a conexão é estabelecida, a função on_connect é chamada, 
+    e o servidor se inscreve em cada um dos tópicos definidos anteriormente.
+    '''
     def on_connect(self, client, userdata, flags, rc):
         print("Conexão estabelecida com o código de retorno: {}".format(rc))
         # Inscreve-se em um tópico
@@ -26,7 +32,12 @@ class Server():
         for top in self.topic:
             self.client.subscribe(top)
 
-        
+    '''
+    a função on_message é chamada, e o servidor trata a mensagem recebida. Se a mensagem recebida estiver
+    no tópico /procurar_postos, a função search_station é chamada para procurar a estação de gasolina mais 
+    próxima e publicar uma mensagem de resposta. Se a mensagem recebida estiver no tópico /receber_posto, 
+    o servidor publica a mensagem recebida no tópico /posto_enc 
+    '''   
     
     def on_message(self, client, userdata, message):
         print("Mensagem recebida no tópico: {}, msg: {}  nível QoS {}".format(message.topic,
