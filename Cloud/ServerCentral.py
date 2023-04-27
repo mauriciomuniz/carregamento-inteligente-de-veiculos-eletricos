@@ -19,27 +19,33 @@ class Server:
         # Preenche a lista com os servidores existente no arquivo
         self.insert_in_linked_list()
         
+        self.save_server = None
+        
         
     '''
         Realiza uma busca do servidor atual que solicitou ao server central e busca o próximo servidor. 
         Caso não exista o próximo, busca o anterior. 
     '''    
     def search_server(self, srv):
-        #Encontra o servidor
-        node_server = self.linked_list.find_node(srv) 
-        if(node_server):
-            node_server.visited = True
-            if(self.linked_list.size > 1):
+        # Encontra o servidor e salva em uma variável 
+        if(self.linked_list.size > 1):
+            self.server = self.linked_list.find_node(srv) 
+            if(self.server):
+                self.server.visited = True
+            
                 # Se for o início da lista, será buscado o próximo da lista
-                if(self.linked_list.is_head(node_server)):
-                    return node_server.next
+                if(self.linked_list.is_head(self.server)):
+                    return self.server.next
                 #Se for o final da lista, será buscado o anterior.
-                if(self.linked_list.is_tail(node_server)):
-                    return node_server.previous
-                
-                return node_server.next
-            else:
-                return self.linked_list.head
+                if(self.linked_list.is_tail(self.server)):
+                    return self.server.previous
+                    
+                if(self.server.next):
+                    return self.server.next
+                if(self.server.previous):
+                    return self.server.previous
+                else:
+                    return None
           
         return None
     
@@ -86,14 +92,17 @@ class Server:
         data = client.recv(1024)
         if data:  
             data_server = json.loads(data.decode())
-            server = self.search_server(data_server.get('name_server'))# obtém o nome do servidor que fez a conexão
-            print(f'Se conecte ao server{server.data}')
+            other_server = self.search_server(data_server.get('name_server'))# obtém o nome do servidor que fez a conexão
+            print(f'Se conecte ao server: {other_server.data}')
             
-            s = ClientTCP.Client_TCP(server.data.get("ip"), server.data.get("port")) # Servidor central obtém o dados do próximo servidor(broker) para se comunicar
+            # Servidor central obtém o dados do próximo servidor(broker) para se comunicar
+            s = ClientTCP.Client_TCP(other_server.data.get("ip"), other_server.data.get("port")) 
             resp = json.dumps({"position":data_server.get("position_car")})
-            #resposta do broker
+            
+            # Resposta do broker
             resp_broker = s.connect(resp) #Envia um mensagem para o servidor que deseja obter a resposta
             
+            # Responde o server 
             client.send(resp_broker.encode())
             
         client.close()  

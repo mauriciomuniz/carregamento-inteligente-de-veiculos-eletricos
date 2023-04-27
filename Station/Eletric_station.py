@@ -44,6 +44,8 @@ class EletricStation():
         if(message.topic == "/vagas2"):
             print("vou mandar as minha vagas")
             msg = json.dumps({"name": self.name, "vacancy": self.queue}).encode()
+            if(self.queue > 0):
+                self.queue -= 1
             time.sleep(0.1)
             self.client.publish("/num_vagas2", msg)
        
