@@ -40,7 +40,7 @@ class BrokerSRV():
         self.wars = ws.Warshall()
         
         # servidor tpc criado para interação com outros servidores
-        self.server = ServerTCP.ServerFOG("server1",'localhost', 50000)
+        self.server = ServerTCP.ServerFOG("server2",'localhost', 60000)
         self.server.connect()
         td.Thread(target=self.client_connect_TCP).start()
       
@@ -63,7 +63,7 @@ class BrokerSRV():
             self.who_req = True
             self.message = data.decode()
             self.orig = json.loads(self.message).get("position")
-            self.client.publish("/vagas")
+            self.client.publish("/vagas2")
             time.sleep(2)
             resp = self.response("")
             print(resp)
@@ -85,13 +85,12 @@ class BrokerSRV():
     # topico de /vagas e msg de quantas vagas tem
     # Se o tópico for /num_vagas, então ele busca o numero de vagas nos postos
     def select_topic(self, msg):
-        if(msg.topic == "/location"):
+        if(msg.topic == "/location2"):
             self.location(msg)
-            self.client.publish("/vagas", "há quantas vagas")
-        if(msg.topic == "/num_vagas"):
+            self.client.publish("/vagas2", "há quantas vagas")
+        if(msg.topic == "/num_vagas2"):
             print(self.who_req)
             if(self.who_req):
-                print("entrou aqui dfkajhfsjifhsdi")
                 self.receive_stations(msg)
             else:
                 self.receive_stations(msg)
@@ -108,8 +107,8 @@ class BrokerSRV():
         print("Conexão estabelecida com o código de retorno: {}".format(rc))
 
         # Inscreve-se em um tópico
-        self.client.subscribe("/num_vagas") 
-        self.client.subscribe("/location",qos=1) # Recebe a localização do carro
+        self.client.subscribe("/num_vagas2") 
+        self.client.subscribe("/location2",qos=1) # Recebe a localização do carro
         self.client.subscribe(self.id)
         
 
