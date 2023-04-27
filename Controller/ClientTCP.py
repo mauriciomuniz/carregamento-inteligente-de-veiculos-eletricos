@@ -1,6 +1,11 @@
 import socket
 import json
 
+'''
+ Aqui temos um client tcp para comunicação entre brokers
+ para que possa passar a informação de um broker 
+ para o outro
+'''
 class Client_TCP: 
     def __init__(self, host='localhost', port_TCP=5000):
             self.host = host
@@ -16,8 +21,10 @@ class Client_TCP:
             s.send(msg.encode())
             
             # Aguarda a resposta do servidor
-            #data = s.recv(1024)
-            #print(f"Mensagem do servidor: {data.decode()}")
+            data = s.recv(1024)
+            
+            #print(f"Mensagem do servidor Central: {data.decode()}")
            
             # Fecha a conexão com o servidor
             s.close()
+            return data.decode()

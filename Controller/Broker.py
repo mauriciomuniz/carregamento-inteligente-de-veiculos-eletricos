@@ -8,8 +8,9 @@ import variables as vb
 import Controller.warshall as ws
 import time
 import ServerTCP
+import json
 
-
+# Classe que representa o primeiro broker
 class BrokerSRV():
 
     def __init__(self,address, name, port) -> None:
@@ -19,29 +20,58 @@ class BrokerSRV():
         # Cria uma instância do cliente MQTT
         self.client = mqtt.Client(self.client_name)
 
-        # Define as funções de callback do cliente MQTT
+        # Define as funções de callback do cliente eturnMQTT
         self.client.on_message =self.on_message
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect
+        
         # Conecta-se ao broker MQTT
         self.client.connect(self.broker_address, self.broker_port)
         self.id = f'id_{self.client_name}'
         self.stations = []
         self.orig = ''
         self.list_dis_que = []
-        self.who_req = ''
+        self.who_req = False
         self.id_client = ''
-        #self.init_station()
+        self.id_car = None
+        
         td.Thread(target=self.client.loop_forever).start()
+        
         self.wars = ws.Warshall()
+        
+        # servidor tpc criado para interação com outros servidores
         self.server = ServerTCP.ServerFOG("server1",'localhost', 50000)
         self.server.connect()
-        
-        
-        # SOMENTE PARA TESTES
-        msg =  json.dumps({"name_server":self.server.name,"position_car": self.orig})
-        send_server_central = self.server.send_to_srv_central(msg)
-                
+        td.Thread(target=self.client_connect_TCP).start()
+      
+                   
+
+
+    def client_connect_TCP(self):
+        while True:
+            print ("Waiting to receive message from client")
+            client, address = self.server.con_socket.accept() 
+            td.Thread(target=self.handle_client_TCP, args=(client, address), daemon=True).start()
+     
+    '''
+    Recebe do servidor central requisitções
+    '''
+    def handle_client_TCP(self, client, addr): 
+        print("New connection by {}".format(addr))
+        data = client.recv(1024)
+        if data:
+            self.who_req = True
+            self.message = data.decode()
+            self.orig = json.loads(self.message).get("position")
+            self.client.publish("/vagas")
+            time.sleep(2)
+            resp = self.response("")
+            print(resp)
+            client.send(resp.encode())
+            
+        client.close()  
+        print("Close connection")
+
 
     # Define a função de callback que será chamada quando uma mensagem for recebida
     def on_message(self, client, userdata, message):
@@ -50,19 +80,25 @@ class BrokerSRV():
                                                                             message.qos))
         self.select_topic(message)
         
-
+    # tópicos a serem selecionados, a depender do tópico faz uma ação
+    # Se o tópico for /location, então ele vai buscar a localização baseada no carro atual e publica no 
+    # topico de /vagas e msg de quantas vagas tem
+    # Se o tópico for /num_vagas, então ele busca o numero de vagas nos postos
     def select_topic(self, msg):
         if(msg.topic == "/location"):
             self.location(msg)
             self.client.publish("/vagas", "há quantas vagas")
         if(msg.topic == "/num_vagas"):
-            self.receive_stations(msg)
-            time.sleep(0.5)
-            self.response(msg)
-        if(msg.topic == "/receber_posto"):
-            mes_rec = self.dict_msg(msg)
-            self.format_string(mes_rec.get("path"), mes_rec.get("station"), mes_rec.get("dist"))
-    
+            print(self.who_req)
+            if(self.who_req):
+                print("entrou aqui dfkajhfsjifhsdi")
+                self.receive_stations(msg)
+            else:
+                self.receive_stations(msg)
+                time.sleep(0.1)
+                self.response(msg)
+                
+        
     def dict_msg(self, msg):
         return json.loads(msg.payload.decode())
         
@@ -73,10 +109,9 @@ class BrokerSRV():
 
         # Inscreve-se em um tópico
         self.client.subscribe("/num_vagas") 
-        self.client.subscribe("/location") # Recebe a localização do carro
+        self.client.subscribe("/location",qos=1) # Recebe a localização do carro
         self.client.subscribe(self.id)
         self.client.subscribe("/pegar_vagas") 
-        self.client.subscribe('/receber_posto')
 
     # Define a função de callback que será chamada quando a conexão for perdida
     def on_disconnect(self, client, userdata, rc):
@@ -88,11 +123,13 @@ class BrokerSRV():
     def location(self,msg):
         dict_msg = self.dict_msg(msg)
         self.orig = dict_msg.get('localizacao')
-        self.who_req = dict_msg['request']
-        self.id_client = dict_msg.get('id_car')
-        
-    # cria um obj json e adiciona em uma lista de postos 
+        self.id_car = dict_msg.get('id_car')
+       
+       
+    # recebe as estações com nome, quantidade de vagas, distancia e fila
+    # tbm cria um obj json e adiciona em uma lista de postos por causa do da função dict_msg
     def receive_stations(self, msg):
+        print("Recebendo dados dos postos")
         dict_msg = self.dict_msg(msg)
         local = dict_msg["name"] 
         vacancy = dict_msg.get("vacancy")
@@ -104,38 +141,49 @@ class BrokerSRV():
      
     
     def response(self, msg):
-    
-        if(len(self.stations) == 0 ):
+        # Se a lista de estação for 0 e não foi o servidor que solicitou a conexão
+        # ou seja, foi o carro
+        if(len(self.stations) == 0 and not self.who_req):
             msg =  json.dumps({"name_server":self.server.name,"position_car": self.orig})
             # Envia uma mensagem informando o nome do server e a posicao do carro
-            send_server_central = self.server.send_to_srv_central(msg)
-            #response = requestServer.connect(msg)
-            #self.client.publish("/procurar_postos", msg)
+            self.resp_from_server_central = self.server.send_to_srv_central(msg)
+            
+            resp = json.loads(self.resp_from_server_central)
+            print(self.resp_from_server_central)
+            self.client.publish(f'/{self.id_car}', self.format_string(resp.get("path"),resp.get("station"),resp.get("dist")))
+            
         else:
             self.stations.sort(key=lambda short: short["dist_and_queue"]) 
             station_name = self.stations[0].get("station")
             
             list_path = self.wars.constructPath(self.orig, vb.VERTICES.index(station_name))
             dist = self.wars.dis[self.orig][vb.VERTICES.index(station_name)]
-            if(self.who_req == "server"):
+            if(self.who_req):
                 print("Encontrei postos com vagas solicitada pelo servidor")
-                msg_return = json.dumps({"path":list_path, "station": station_name, "dist": dist}).encode()
-                self.client.publish("/receber_posto", msg_return)
+                self.clear_variables()
+                return json.dumps({"path":list_path, "station": station_name, "dist": dist})
+              
             else:
                 self.format_string(list_path, station_name,  dist)
+        self.clear_variables()
         
-        self.orig = ''
-        self.stations.clear()
-        self.who_req = ''
-        self.id = ''
     
+    '''
+    Limpas as variáveis para manter o contexto padrão depois da execução
+    '''
+    def clear_variables(self):
+        self.orig = None
+        self.stations.clear()
+        self.who_req = False
+        self.id = None
+        
+        
     def format_string(self, path, station, dist):
-        print("Vá para o posto {} seguindo a rota: {}\nDistância de {}km".format(
-                     station, self.wars.printPath(path), dist)) 
+        return "Vá para o posto {} seguindo a rota: {}\nDistância de {}km".format(
+                     station, self.wars.printPath(path), dist)
        
         
        
    
-
 
 bk = BrokerSRV('localhost','bk1' ,1883)

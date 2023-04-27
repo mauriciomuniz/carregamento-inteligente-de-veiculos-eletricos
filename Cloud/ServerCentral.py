@@ -31,7 +31,6 @@ class Server:
             if(self.linked_list.size > 1):
                 # Se for o início da lista, será buscado o próximo da lista
                 if(self.linked_list.is_head(node_server)):
-                    print("en")
                     return node_server.next
                 #Se for o final da lista, será buscado o anterior.
                 if(self.linked_list.is_tail(node_server)):
@@ -80,17 +79,18 @@ class Server:
     def handle_client_TCP(self, client, addr):
         print("New connection by {}".format(addr))
         data = client.recv(1024)
-        if data:
-          
-            
+        if data:  
             data_server = json.loads(data.decode())
             server = self.search_server(data_server.get('name_server'))# obtém o nome do servidor que fez a conexão
-            print(server.data)
-            #response = "Olá cliente"
-            #client.send(response.encode('utf-8')) 
+            print(f'Se conecte ao server{server.data}')
             
-            s = ClientTCP.Client_TCP(server.data.get("ip"), server.data.get("port"))
-            s.connect("Servidor central entrando em contato") #Envia um mensagem para o servidor que deseja obter a resposta
+            s = ClientTCP.Client_TCP(server.data.get("ip"), server.data.get("port")) # Servidor central obtém o dados do próximo servidor(broker) para se comunicar
+            resp = json.dumps({"position":data_server.get("position_car")})
+            #resposta do broker
+            resp_broker = s.connect(resp) #Envia um mensagem para o servidor que deseja obter a resposta
+            
+            client.send(resp_broker.encode())
+            
         client.close()  
         print("Close connection")
         

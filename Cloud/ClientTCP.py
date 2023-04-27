@@ -16,8 +16,9 @@ class Client_TCP:
             s.send(msg.encode())
             
             # Aguarda a resposta do servidor
-            #data = s.recv(1024)
-            #print(f"Mensagem do servidor: {data.decode()}")
+            data = s.recv(1024)
+            print(f"Mensagem do servidor: {data.decode()}")
            
             # Fecha a conexão com o servidor
             s.close()
+            return data.decode()

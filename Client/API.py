@@ -3,11 +3,6 @@ from flask import Flask, jsonify
 
 app = Flask(__name__)
 
-'''carros = [
-    Client("car1", "localhost", 1883),
-    Client("car2", "localhost", 1883),
-    Client("car3", "localhost", 1883),
-]'''
 
 @app.route("/bateria")
 def hello_world():
@@ -28,3 +23,5 @@ def bateria_carro(nome_carro):
         return jsonify({"mensagem": "Carro não encontrado"})'''
 
 
+def read_file():
+     pass
