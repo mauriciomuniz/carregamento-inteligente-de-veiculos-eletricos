@@ -156,6 +156,7 @@ class BrokerSRV():
             self.stations.sort(key=lambda short: short["dist_and_queue"]) 
             station_name = self.stations[0].get("station")
             
+            # lista de caminhos onde recebe a origem e os vertices com o indice de nome das estações
             list_path = self.wars.constructPath(self.orig, vb.VERTICES.index(station_name))
             dist = self.wars.dis[self.orig][vb.VERTICES.index(station_name)]
             if(self.who_req):

@@ -68,7 +68,8 @@ class ServerFOG:
         print("Close connection")
         
     
-   
+   # envia uma mensagem para o servidor central usando um client tcp. Aqui é criado uma instância da classe 
+   # Client_TCP e é conectado ao servidor central pelo método de conexão 
     def send_to_srv_central(self, msg):
         client = ClientTCP.Client_TCP('localhost', self.port_srv_central)
         return client.connect(msg)

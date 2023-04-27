@@ -49,7 +49,7 @@ class EletricStation():
        
 
 
-
+# inicialização do posto
 if __name__ == '__main__':
     # inicialização do posto
     client = EletricStation(name="P1", address='localhost', port=1883, vacancy=12)

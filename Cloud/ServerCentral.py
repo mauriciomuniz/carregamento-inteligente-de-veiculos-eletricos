@@ -46,7 +46,11 @@ class Server:
     def insert_in_linked_list(self):
         for srv in (self.list_servers):
             self.linked_list.insert_init(srv)
-        
+            
+    ''' 
+    connect(), um socket é criado e a conexão é aguardada. Na função client_connect_TCP(), 
+    um thread é iniciado para lidar com a conexão do cliente  
+    '''  
     def connect(self):
         try:
             self.con_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
