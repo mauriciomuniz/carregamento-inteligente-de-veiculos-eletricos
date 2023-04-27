@@ -142,6 +142,7 @@ class BrokerSRV():
         # Se a lista de estação for 0 e não foi o servidor que solicitou a conexão
         # ou seja, foi o carro
         if(len(self.stations) == 0 and not self.who_req):
+            print("teste")
             msg =  json.dumps({"name_server":self.server.name,"position_car": self.orig})
             # Envia uma mensagem informando o nome do server e a posicao do carro
             self.resp_from_server_central = self.server.send_to_srv_central(msg)
@@ -163,7 +164,9 @@ class BrokerSRV():
                 return json.dumps({"path":list_path, "station": station_name, "dist": dist})
               
             else:
-                self.format_string(list_path, station_name,  dist)
+                #self.format_string(list_path, station_name,  dist)
+                self.client.publish(f'/{self.id_car}', self.format_string(list_path, station_name, dist))
+
         self.clear_variables()
         
     

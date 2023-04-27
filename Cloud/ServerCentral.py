@@ -25,7 +25,8 @@ class Server:
         Caso não exista o próximo, busca o anterior. 
     '''    
     def search_server(self, srv):
-        node_server = self.linked_list.find_node(srv)
+        #Encontra o servidor
+        node_server = self.linked_list.find_node(srv) 
         if(node_server):
             node_server.visited = True
             if(self.linked_list.size > 1):

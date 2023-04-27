@@ -61,5 +61,5 @@ class EletricStation():
 
 
 if __name__ == '__main__':
-    client = EletricStation(name="P2", address='localhost', port=1883, vacancy=0)
+    client = EletricStation(name="P2", address='localhost', port=1883, vacancy=12)
     

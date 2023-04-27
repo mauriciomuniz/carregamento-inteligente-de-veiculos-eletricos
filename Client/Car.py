@@ -6,9 +6,9 @@ import paho.mqtt.client as paho
 import threading
 from time import sleep
 import random as rd
-import  variables as vb
+import variables as vb
 import json
-
+import file
 
 
 class Client():
@@ -52,7 +52,8 @@ class Client():
         print("Mensagem recebida no tópico: {}, msg: {}  nível QoS {}".format(message.topic,
                                                                             message.payload.decode(),
                                                                             message.qos))
-        self.msg = message
+        self.msg =  {"data":message.payload.decode()}
+        file.write(self.msg, "./data.json")
         sleep(5)   
         self.battery = 100
         threading.Thread(target=self.send_msg).start()
