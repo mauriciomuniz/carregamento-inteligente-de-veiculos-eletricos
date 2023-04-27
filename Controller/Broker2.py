@@ -91,6 +91,7 @@ class BrokerSRV():
         if(msg.topic == "/num_vagas2"):
             print(self.who_req)
             if(self.who_req):
+               
                 self.receive_stations(msg)
             else:
                 self.receive_stations(msg)
@@ -141,29 +142,48 @@ class BrokerSRV():
         # Se a lista de estação for 0 e não foi o servidor que solicitou a conexão
         # ou seja, foi o carro
         if(len(self.stations) == 0 and not self.who_req):
+            print("teste")
             msg =  json.dumps({"name_server":self.server.name,"position_car": self.orig})
             # Envia uma mensagem informando o nome do server e a posicao do carro
             self.resp_from_server_central = self.server.send_to_srv_central(msg)
             
-            resp = json.loads(self.resp_from_server_central)
-            print(self.resp_from_server_central)
-            self.client.publish(f'/{self.id_car}', self.format_string(resp.get("path"),resp.get("station"),resp.get("dist")))
-            
+            print(f'Responda para o server {self.resp_from_server_central}')
+            if(self.resp_from_server_central == "0"):
+                self.client.publish(f'/{self.id_car}', "Não foi possível encontrar um posto. aguarde...")
+            else:
+                resp = json.loads(self.resp_from_server_central)
+                self.client.publish(f'/{self.id_car}', self.format_string(resp.get("path"),resp.get("station"),resp.get("dist")))
+
         else:
-            self.stations.sort(key=lambda short: short["dist_and_queue"]) 
-            station_name = self.stations[0].get("station")
+            if(len(self.stations) != 0 and self.who_req):
+                self.stations.sort(key=lambda short: short["dist_and_queue"]) 
+                station_name = self.stations[0].get("station")
             
-            # lista de caminhos onde recebe a origem e os vertices com o indice de nome das estações
-            list_path = self.wars.constructPath(self.orig, vb.VERTICES.index(station_name))
-            dist = self.wars.dis[self.orig][vb.VERTICES.index(station_name)]
-            if(self.who_req):
+                # Lista de caminhos onde recebe a origem e os vertices com o índice de nome das estações
+                list_path = self.wars.constructPath(self.orig, vb.VERTICES.index(station_name))
+                dist = self.wars.dis[self.orig][vb.VERTICES.index(station_name)]
+            
                 print("Encontrei postos com vagas solicitada pelo servidor")
                 self.clear_variables()
                 return json.dumps({"path":list_path, "station": station_name, "dist": dist})
-              
-            else:
-                self.format_string(list_path, station_name,  dist)
+            
+            elif(self.who_req):
+                self.clear_variables()
+                return "0"
+             
+        if(len(self.stations) > 0):
+            #Realiza a publicação para o carro que solicitou
+            self.stations.sort(key=lambda short: short["dist_and_queue"]) 
+            station_name = self.stations[0].get("station")
+            
+            # Lista de caminhos onde recebe a origem e os vertices com o índice de nome das estações
+            list_path = self.wars.constructPath(self.orig, vb.VERTICES.index(station_name))
+            dist = self.wars.dis[self.orig][vb.VERTICES.index(station_name)]
+            
+            self.client.publish(f'/{self.id_car}', self.format_string(list_path, station_name, dist))
+
         self.clear_variables()
+        
         
     
     '''
@@ -184,4 +204,4 @@ class BrokerSRV():
        
    
 
-bk = BrokerSRV('localhost','bk1' ,1883)
+bk = BrokerSRV('localhost','bk2' ,1883)

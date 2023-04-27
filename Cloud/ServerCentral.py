@@ -27,29 +27,25 @@ class Server:
         Caso não exista o próximo, busca o anterior. 
     '''    
     def search_server(self, srv):
+        
         # Encontra o servidor e salva em uma variável 
         if(self.linked_list.size > 1):
             self.server = self.linked_list.find_node(srv) 
             if(self.server):
                 self.server.visited = True
-            
+        
                 # Se for o início da lista, será buscado o próximo da lista
-                if(self.linked_list.is_head(self.server)):
+                if(self.linked_list.is_head(self.server) or self.server.next):
                     return self.server.next
                 #Se for o final da lista, será buscado o anterior.
-                if(self.linked_list.is_tail(self.server)):
+                elif(self.linked_list.is_tail(self.server) or self.server.previous):
                     return self.server.previous
-                    
-                if(self.server.next):
-                    return self.server.next
-                if(self.server.previous):
-                    return self.server.previous
-                else:
-                    return None
           
         return None
     
-    
+    '''
+    Insere os servidores na lista duplamente encadeada
+    '''
     def insert_in_linked_list(self):
         for srv in (self.list_servers):
             self.linked_list.insert_init(srv)
@@ -93,18 +89,26 @@ class Server:
         if data:  
             data_server = json.loads(data.decode())
             other_server = self.search_server(data_server.get('name_server'))# obtém o nome do servidor que fez a conexão
-            print(f'Se conecte ao server: {other_server.data}')
-            
-            # Servidor central obtém o dados do próximo servidor(broker) para se comunicar
-            s = ClientTCP.Client_TCP(other_server.data.get("ip"), other_server.data.get("port")) 
             resp = json.dumps({"position":data_server.get("position_car")})
             
-            # Resposta do broker
-            resp_broker = s.connect(resp) #Envia um mensagem para o servidor que deseja obter a resposta
+            print(f'Se conecte ao server: {other_server.data}')
             
-            # Responde o server 
-            client.send(resp_broker.encode())
-            
+            if(other_server):            
+                # Servidor central obtém o dados do próximo servidor(broker) para se comunicar
+                s = ClientTCP.Client_TCP(other_server.data.get("ip"), other_server.data.get("port")) 
+                # Resposta do broker
+                resp_broker = s.connect(resp) #Envia um mensagem para o servidor que deseja obter a resposta
+                print(f'resposta do server- {other_server.data.get("name")} reps- {resp_broker}')
+                
+                self.search_server(other_server.data.get("name"))
+                
+                # Responde o server 
+                client.send(resp_broker.encode())
+            else:
+                 client.send("Não há mais servidor para pesquisar")
+    
+    
+              
         client.close()  
         print("Close connection")
         
