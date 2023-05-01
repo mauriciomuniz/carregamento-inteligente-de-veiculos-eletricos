@@ -40,7 +40,7 @@ class BrokerSRV():
         self.wars = ws.Warshall()
         
         # servidor tpc criado para interação com outros servidores
-        self.server = ServerTCP.ServerFOG("server1",'localhost', 50000)
+        self.server = ServerTCP.ServerFOG("server3",'localhost', 65000)
         self.server.connect()
         td.Thread(target=self.client_connect_TCP).start()
       
@@ -63,9 +63,8 @@ class BrokerSRV():
             self.who_req = True
             self.message = data.decode()
             self.orig = json.loads(self.message).get("position")
-            
             # Publica para os postos enviarem os estados das filas
-            self.client.publish("/vagas")
+            self.client.publish("/vagas3")
             time.sleep(2)
             resp = self.response("")
             print(resp)
@@ -87,13 +86,12 @@ class BrokerSRV():
     # topico de /vagas e msg de quantas vagas tem
     # Se o tópico for /num_vagas, então ele busca o numero de vagas nos postos
     def select_topic(self, msg):
-        if(msg.topic == "/location"):
+        if(msg.topic == "/location3"):
             self.location(msg)
-            self.client.publish("/vagas", "há quantas vagas")
-        if(msg.topic == "/num_vagas"):
+            self.client.publish("/vagas3", "há quantas vagas")
+        if(msg.topic == "/num_vagas3"):
             print(self.who_req)
             if(self.who_req):
-                print("entrou aqui dfkajhfsjifhsdi")
                 self.receive_stations(msg)
             else:
                 self.receive_stations(msg)
@@ -110,8 +108,8 @@ class BrokerSRV():
         print("Conexão estabelecida com o código de retorno: {}".format(rc))
 
         # Inscreve-se em um tópico
-        self.client.subscribe("/num_vagas") 
-        self.client.subscribe("/location",qos=1) # Recebe a localização do carro
+        self.client.subscribe("/num_vagas3") 
+        self.client.subscribe("/location3",qos=1) # Recebe a localização do carro
         self.client.subscribe(self.id)
         
 
@@ -148,8 +146,7 @@ class BrokerSRV():
             # Envia uma mensagem informando o nome do server e a posicao do carro
             self.resp_from_server_central = self.server.send_to_srv_central(msg)
             
-            print(f'Resposta do servidor central: {self.resp_from_server_central}')
-            
+            print(f'Responda para o server {self.resp_from_server_central}')
             if(self.resp_from_server_central == "0"):
                 self.client.publish(f'/{self.id_car}', "Não foi possível encontrar um posto. aguarde...")
             else:
@@ -205,4 +202,4 @@ class BrokerSRV():
        
    
 
-bk = BrokerSRV('localhost','bk1' ,1883)
+bk = BrokerSRV('localhost','bk3' ,1883)

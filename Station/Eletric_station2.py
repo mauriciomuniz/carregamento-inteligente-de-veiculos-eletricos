@@ -4,7 +4,11 @@ import paho.mqtt.client as mqtt_client
 import threading as td
 import json
 
-
+'''
+    A classe EletricStation representa um posto de carregamento de veiculos elétricos
+    usa o mqtt para comunicação com outras entidades e inicia com alguns atributos como nome, vagas, portas
+    entre outros thread para que o cliente rode em segundo plano, enquanto outras tarefas sao executadas
+'''
 class EletricStation():
     def __init__(self, name, address, port, vacancy) -> None:
         self.name = name
@@ -12,11 +16,7 @@ class EletricStation():
        
         self.broker = address
         self.port = port
-        self.topic = "/num_vagas"
-        # generate client ID with pub prefix randomly
-        #client_id = f'python-mqtt-{random.randint(0, 1000)}'
-        # username = 'emqx'
-        # password = 'public'
+        self.topic = "/num_vagas2"
         
         self.client = mqtt_client.Client(name)
         self.client.connect(self.broker, self.port)
@@ -25,11 +25,11 @@ class EletricStation():
         td.Thread(target=self.client.loop_forever).start()
         
 
-
+    # Métodos de comunicação mqtt para lidar com conexão, mensagem
     def on_connect(self, client, userdata, flags, rc):
         print("Conexão estabelecida com o código de retorno: {}".format(rc))
         # Inscreve-se em um tópico
-        client.subscribe("/vagas")
+        client.subscribe("/vagas2")
       
         
     
@@ -37,29 +37,20 @@ class EletricStation():
         print("Mensagem recebida no tópico: {}, msg: {}  nível QoS {}".format(message.topic,
                                                                             message.payload.decode(),
                                                                             message.qos))
-        if(message.topic == "/vagas"):
+        if(message.topic == "/vagas2"):
             print("vou mandar as minha vagas")
             msg = json.dumps({"name": self.name, "vacancy": self.queue}).encode()
+            if(self.queue > 0):
+                self.queue -= 1
             time.sleep(0.1)
-            self.client.publish("/num_vagas", msg)
-       
-
-    '''def publish(self):
-        msg_count = 0
-        time.sleep(1)
-        msg = {"name":self.name, "queue":self.queue}
-        result = self.client.publish(self.topic, json.dumps(msg))
-        # result: [0, 1]
-        status = result[0]
-        if status == 0:
-            print(f"Send `{msg}` to topic `{self.topic}`")
-        else:
-            print(f"Failed to send message to topic {self.topic}")
-        msg_count += 1'''
+            self.client.publish("/num_vagas2", msg)
+            if(self.queue > 0):
+                self.queue -= 1
+                
 
 
-
-
+# inicialização do posto
 if __name__ == '__main__':
-    client = EletricStation(name="P2", address='localhost', port=1883, vacancy=12)
+    # inicialização do posto
+    client = EletricStation(name="P2", address='localhost', port=1883, vacancy=4)
     

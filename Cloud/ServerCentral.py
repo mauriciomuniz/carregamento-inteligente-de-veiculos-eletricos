@@ -6,42 +6,24 @@ import linked_list
 import json
 import ClientTCP
 
+
 class Server:
     
-    def __init__(self, host='localhost', port_TCP=5555):
+    def __init__(self, host, port_TCP):
         self.host = host
         self.port_TCP = port_TCP
         self.data_payload = 2048 
+        
+        # Carrega os servidores do arquivo para a memória
         self.list_servers = file.read("./servers.json")
-        # Cria uma lista duplamente encadeada para navegar entres os servidores
-        self.linked_list = linked_list.LinkedListDuple()
+        
+        # Cria uma lista circular encadeada para navegar entres os servidores
+        self.linked_list = linked_list.LinkedListCircular()
         
         # Preenche a lista com os servidores existente no arquivo
         self.insert_in_linked_list()
+    
         
-        self.save_server = None
-        
-        
-    '''
-        Realiza uma busca do servidor atual que solicitou ao server central e busca o próximo servidor. 
-        Caso não exista o próximo, busca o anterior. 
-    '''    
-    def search_server(self, srv):
-        
-        # Encontra o servidor e salva em uma variável 
-        if(self.linked_list.size > 1):
-            self.server = self.linked_list.find_node(srv) 
-            if(self.server):
-                self.server.visited = True
-        
-                # Se for o início da lista, será buscado o próximo da lista
-                if(self.linked_list.is_head(self.server) or self.server.next):
-                    return self.server.next
-                #Se for o final da lista, será buscado o anterior.
-                elif(self.linked_list.is_tail(self.server) or self.server.previous):
-                    return self.server.previous
-          
-        return None
     
     '''
     Insere os servidores na lista duplamente encadeada
@@ -81,37 +63,43 @@ class Server:
                 client_thread.start()
                 
     '''
-    Recebe clientes e suas respectivas mensagens http
+    Recebe as requisitções da névoa afim de encontrar uma resposta para indicar o carro ir a um posto
     '''
     def handle_client_TCP(self, client, addr):
         print("New connection by {}".format(addr))
         data = client.recv(1024)
+        
         if data:  
             data_server = json.loads(data.decode())
-            other_server = self.search_server(data_server.get('name_server'))# obtém o nome do servidor que fez a conexão
+            server_requester = self.linked_list.find_node(data_server.get('name_server'))
+            
+            next_server = server_requester.next
             resp = json.dumps({"position":data_server.get("position_car")})
             
-            print(f'Se conecte ao server: {other_server.data}')
+            # Se existe um proximo servidor
+            if(next_server):
+                check = "0"
+                
+                while(check == "0" and server_requester.data.get('name') != next_server.data.get('name')):
+                    
+                    # Servidor central obtém o dados do próximo servidor/broker para se comunicar
+                    print(f'Tentando se conectar ao server {next_server.data.get("name")} porta:{next_server.data.get("port")}')
+                    s = ClientTCP.Client_TCP(next_server.data.get("ip"), next_server.data.get("port")) 
+                
+                    # Resposta do broker
+                    check = s.connect(resp) #Envia um mensagem para o servidor que deseja obter a resposta
+                    sleep(0.1)
+                    next_server = next_server.next
             
-            if(other_server):            
-                # Servidor central obtém o dados do próximo servidor(broker) para se comunicar
-                s = ClientTCP.Client_TCP(other_server.data.get("ip"), other_server.data.get("port")) 
-                # Resposta do broker
-                resp_broker = s.connect(resp) #Envia um mensagem para o servidor que deseja obter a resposta
-                print(f'resposta do server- {other_server.data.get("name")} reps- {resp_broker}')
-                
-                self.search_server(other_server.data.get("name"))
-                
-                # Responde o server 
-                client.send(resp_broker.encode())
+                # Responde o server da névoa que solicitou
+                client.send(check.encode())
+           
             else:
                  client.send("Não há mais servidor para pesquisar")
     
-    
-              
         client.close()  
         print("Close connection")
         
         
-s = Server()
+s = Server('localhost',5555)
 s.connect()

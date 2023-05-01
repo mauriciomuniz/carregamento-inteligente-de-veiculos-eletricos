@@ -3,9 +3,11 @@ class Node:
     def __init__(self, data):
         self.data = data
         self.next = None
+        self.previous = None
+        self.visited = False
 
 
-class LinkedListCircular:
+class LinkedListDuple:
 
     def __init__(self):
         self.head = None
@@ -23,24 +25,16 @@ class LinkedListCircular:
     '''
     def print_list(self):
         current = self.head
-        if(self.size == 1):
+        while(current != None):
             print(current.data)
-        elif(self.size > 1):      
-            print(current.data)  
-            while(current.next != self.head):  
-                current = current.next    
-                print(current.data)
-        else:
-            print("A lista está vazia")
-          
+            current = current.next  
             
     '''
     Encontra o nó e o retorna
     '''
     def find_node(self,server):
         current = self.head
-        
-        for i in range(self.size):
+        while(current != None):
             if(current.data.get("name") == server):
                 return current
             current = current.next
@@ -49,25 +43,26 @@ class LinkedListCircular:
     '''
     Insere em uma lista vazia
     '''
-    def __insert_list_empty(self, data): 
+    def insert_list_empty(self, data): 
         node = Node(data)
         self.head = node
         self.tail = node
         self.size += 1
 
+       
         
     '''
     Insere no ínicio da lista
     '''
     def insert_init(self, data):
         if self.size == 0:
-            self.__insert_list_empty(data)
+             self.insert_list_empty(data)
         else:
             node = Node(data)
-            node.next = self.head
-            self.tail.next = node
+            node.next = self.head           
+            self.head.previous = node
             self.head = node
             self.size += 1
-            
 
        
+

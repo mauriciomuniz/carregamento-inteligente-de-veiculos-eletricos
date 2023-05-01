@@ -13,7 +13,7 @@
     {
         "name":"server3",
         "ip": "localhost",
-        "port": 70000
+        "port": 65000
     }
          
 ]

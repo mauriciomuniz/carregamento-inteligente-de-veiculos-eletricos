@@ -54,7 +54,7 @@ class BrokerSRV():
             td.Thread(target=self.handle_client_TCP, args=(client, address), daemon=True).start()
      
     '''
-    Recebe do servidor central requisitções
+    Recebe do servidor central requisições
     '''
     def handle_client_TCP(self, client, addr): 
         print("New connection by {}".format(addr))
@@ -63,6 +63,7 @@ class BrokerSRV():
             self.who_req = True
             self.message = data.decode()
             self.orig = json.loads(self.message).get("position")
+            # Publica para os postos enviarem os estados das filas
             self.client.publish("/vagas2")
             time.sleep(2)
             resp = self.response("")
@@ -91,7 +92,6 @@ class BrokerSRV():
         if(msg.topic == "/num_vagas2"):
             print(self.who_req)
             if(self.who_req):
-               
                 self.receive_stations(msg)
             else:
                 self.receive_stations(msg)
@@ -140,9 +140,8 @@ class BrokerSRV():
     
     def response(self, msg):
         # Se a lista de estação for 0 e não foi o servidor que solicitou a conexão
-        # ou seja, foi o carro
+        # ou seja, foi o carro. Então uma conexão com o servidor central é estbelecida
         if(len(self.stations) == 0 and not self.who_req):
-            print("teste")
             msg =  json.dumps({"name_server":self.server.name,"position_car": self.orig})
             # Envia uma mensagem informando o nome do server e a posicao do carro
             self.resp_from_server_central = self.server.send_to_srv_central(msg)
@@ -154,8 +153,8 @@ class BrokerSRV():
                 resp = json.loads(self.resp_from_server_central)
                 self.client.publish(f'/{self.id_car}', self.format_string(resp.get("path"),resp.get("station"),resp.get("dist")))
 
-        else:
-            if(len(self.stations) != 0 and self.who_req):
+        elif(self.who_req):
+            if(len(self.stations) > 0):
                 self.stations.sort(key=lambda short: short["dist_and_queue"]) 
                 station_name = self.stations[0].get("station")
             
@@ -163,13 +162,13 @@ class BrokerSRV():
                 list_path = self.wars.constructPath(self.orig, vb.VERTICES.index(station_name))
                 dist = self.wars.dis[self.orig][vb.VERTICES.index(station_name)]
             
-                print("Encontrei postos com vagas solicitada pelo servidor")
+                print("Encontrei postos com vagas solicitada pelo servidor central")
                 self.clear_variables()
                 return json.dumps({"path":list_path, "station": station_name, "dist": dist})
             
-            elif(self.who_req):
+            else:
                 self.clear_variables()
-                return "0"
+                return "0" # Retorna para o servidor central informando 0 que significa que não tinham postos com vagas
              
         if(len(self.stations) > 0):
             #Realiza a publicação para o carro que solicitou
@@ -183,7 +182,6 @@ class BrokerSRV():
             self.client.publish(f'/{self.id_car}', self.format_string(list_path, station_name, dist))
 
         self.clear_variables()
-        
         
     
     '''

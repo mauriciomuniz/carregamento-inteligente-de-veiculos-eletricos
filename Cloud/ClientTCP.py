@@ -18,7 +18,7 @@ class Client_TCP:
             
             # Aguarda a resposta do servidor
             data = s.recv(1024)
-            print(f"Mensagem do servidor: {data.decode()}")
+            print(f"Mensagem do servidor da névoa: {data.decode()}")
            
             # Fecha a conexão com o servidor
             s.close()
