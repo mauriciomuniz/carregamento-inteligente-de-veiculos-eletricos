@@ -23,17 +23,16 @@ class Client():
         
         self.msg = None
         self.battery = battery  # battery level in percentage
+        self.count = 0
         self.list_p = [] # lista de posições onde o carro poderá estar
+        
+        
         for i in range(1, 7):
             self.list_p.append(chr(64 + i))
 
         threading.Thread(target=self.send_msg).start()
         threading.Thread(target=self.client.loop_forever).start()
         
-    def wait_charge(self):
-        print("Esperando carregar...")
-        while True:
-            pass
         
     def on_publish(self, client, userdata, result):  # create function for callback
         print("data published \n")
@@ -54,13 +53,22 @@ class Client():
                                                                             message.qos))
         self.msg =  {"data":message.payload.decode()}
         file.write(self.msg, "./data.json")
-        sleep(5)   
+        self.charging()
         self.battery = 100
         threading.Thread(target=self.send_msg).start()
         
+    def charging(self):
+        print("Carregando...")
+        sleep(self.count) 
+        print("Carro carregado...")
+       
+    '''
+    Decrementa a bateria a cada 2k rodados
+    ''' 
     def decrease_battery(self, distance):
         # diminui 1% por 2km
         self.battery -= distance/200
+        self.count += 0.5
         print(self.battery)
         
     

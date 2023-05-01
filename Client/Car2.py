@@ -8,7 +8,7 @@ from time import sleep
 import random as rd
 import variables as vb
 import json
-
+import file
 
 
 class Client():
@@ -23,7 +23,10 @@ class Client():
         
         self.msg = None
         self.battery = battery  # battery level in percentage
+        self.count = 0
         self.list_p = [] # lista de posições onde o carro poderá estar
+        
+        
         for i in range(1, 7):
             self.list_p.append(chr(64 + i))
 
@@ -52,14 +55,24 @@ class Client():
         print("Mensagem recebida no tópico: {}, msg: {}  nível QoS {}".format(message.topic,
                                                                             message.payload.decode(),
                                                                             message.qos))
-        self.msg = message
-        sleep(5)   
+        self.msg =  {"data":message.payload.decode()}
+        file.write(self.msg, "./data.json")
+        self.charging()
         self.battery = 100
         threading.Thread(target=self.send_msg).start()
-        
+       
+         
+    def charging(self):
+        print("Carregando...")
+        sleep(self.count) 
+        print("Carro carregado...")
+    '''
+    Decrementa a bateria a cada 2k rodados
+    ''' 
     def decrease_battery(self, distance):
         # diminui 1% por 2km
         self.battery -= distance/200
+        self.count += 0.5
         print(self.battery)
         
     
@@ -75,7 +88,7 @@ class Client():
                 if(result[0] == 0):
                     #threading.Thread(target=self.wait_charge).start()
                     break
-            self.decrease_battery(100)
+            self.decrease_battery(30)
 
     # Gera um número referente a posição do vertor dos vértices. Excluindo os postos
     def random_position(self):
