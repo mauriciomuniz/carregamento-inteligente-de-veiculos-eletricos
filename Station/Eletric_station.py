@@ -25,6 +25,7 @@ class EletricStation():
 
     def on_connect(self, client, userdata, flags, rc):
         print("Conexão estabelecida com o código de retorno: {}".format(rc))
+        
         # Inscreve-se em um tópico
         client.subscribe("/vagas")
       
@@ -35,17 +36,13 @@ class EletricStation():
                                                                             message.payload.decode(),
                                                                             message.qos))
         if(message.topic == "/vagas"):
-            print("vou mandar as minha vagas")
+            print("Vou mandar as minha vagas")
             msg = json.dumps({"name": self.name, "vacancy": self.queue}).encode()
             time.sleep(0.1)
             self.client.publish("/num_vagas", msg)
             if(self.queue > 0):
                 self.queue -= 1
        
-
-
-
-
 
 if __name__ == '__main__':
     client = EletricStation(name="P1", address='localhost', port=1883, vacancy=0)

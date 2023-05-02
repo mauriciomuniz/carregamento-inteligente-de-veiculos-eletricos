@@ -93,7 +93,6 @@ class BrokerSRV():
         if(msg.topic == "/num_vagas"):
             print(self.who_req)
             if(self.who_req):
-                print("entrou aqui dfkajhfsjifhsdi")
                 self.receive_stations(msg)
             else:
                 self.receive_stations(msg)
