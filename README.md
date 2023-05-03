@@ -32,13 +32,15 @@ O sistema foi desenvolvido na linguagem python, onde foi utilizado a framework f
 Essa imagem é uma representação gráfica de como foi pensado o posto.
 ![1.jpeg](https://github.com/mauriciomuniz/carregamento-inteligente-de-veiculos-eletricos/blob/main/img/1.jpeg)
 
-O sistema foi pensado da seguinte forma: temos um servidor central que é nossa núvem, e os brokers, que são mais do que brokers pois realizam operações e comunicações com outros servidores, assumem o papel da nossa névoa. Nos brokers temos informações que chegam dos carros e postos, essa comunicação é feita usando o protocolo mqtt. Os carros perguntam para o broker se o posto que está associado a ele tem vaga. 
+O sistema foi pensado da seguinte forma: temos um servidor central que é nossa núvem, e os brokers, que são mais do que brokers pois realizam algumas operações, esses assumem o papel da nossa névoa. Nos brokers temos informações que chegam dos carros e postos, essa comunicação é feita usando o protocolo mqtt. Os carros perguntam para o broker se o posto que está associado a ele tem vaga. O servidor central se comporta como um servidor-cliente, ele está escutando e mandando mensagens para outros brokers, essa comunicação é feita usando uma comunicação tcp com sockets.
 
 ![2.jpeg](https://github.com/mauriciomuniz/carregamento-inteligente-de-veiculos-eletricos/blob/main/img/1.jpeg)
-Se não tiver, a mensagem é passada para a núvem e ele pergunta na próxima névoa se os postos ali tem vaga, se tiver insere e a informação e retornada.
+
+Se não tiver vagas, a mensagem é passada para a núvem e ele pergunta para o próximo nó da névoa se os postos ali tem vaga, se tiver insere o carro e a informação e retornada.
+
 ![4.jpeg](https://github.com/mauriciomuniz/carregamento-inteligente-de-veiculos-eletricos/blob/main/img/1.jpeg)
 
-Se não tiver ele pergunta para outro nó da névoa se aquele posto que está associado a ele tem vagas
+Se não tiver vagas novamente, ele pergunta para o outro próximo nó da névoa se aquele posto que está associado a ele tem vagas
 
 ![3.jpeg](https://github.com/mauriciomuniz/carregamento-inteligente-de-veiculos-eletricos/blob/main/img/1.jpeg)
 
