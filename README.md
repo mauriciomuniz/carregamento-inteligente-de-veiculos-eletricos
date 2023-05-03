@@ -57,3 +57,6 @@ https://github.com/mauriciomuniz/carregamento-inteligente-de-veiculos-eletricos.
 python3 [nome do arquivo]
 ```
 
+##### 4.3 Se utilizar o mesmo computador, pode usar o localhost, se utilizar de outros computadores, então Brokers, Eletric_stations, servers.json devem ser alterado o localhost para o seu hostname
+
+
