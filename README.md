@@ -29,6 +29,22 @@ A névoa é uma nuvem ao nível do solo. Logo, a computação em névoa é a apr
 
 #### 3. Desenvolvimento
 O sistema foi desenvolvido na linguagem python, onde foi utilizado a framework flask, além do protocolo de comunicação mqtt. 
+Essa imagem é uma representação gráfica de como foi pensado o posto.
+![1.jpeg](https://github.com/mauriciomuniz/carregamento-inteligente-de-veiculos-eletricos/blob/main/img/1.jpeg)
+
+O sistema foi pensado da seguinte forma: temos um servidor central que é nossa núvem, e os brokers, que são mais do que brokers pois realizam operações e comunicações com outros servidores, assumem o papel da nossa névoa. Nos brokers temos informações que chegam dos carros e postos, essa comunicação é feita usando o protocolo mqtt. Os carros perguntam para o broker se o posto que está associado a ele tem vaga. 
+
+![2.jpeg](https://github.com/mauriciomuniz/carregamento-inteligente-de-veiculos-eletricos/blob/main/img/1.jpeg)
+Se não tiver, a mensagem é passada para a núvem e ele pergunta na próxima névoa se os postos ali tem vaga, se tiver insere e a informação e retornada.
+![4.jpeg](https://github.com/mauriciomuniz/carregamento-inteligente-de-veiculos-eletricos/blob/main/img/1.jpeg)
+
+Se não tiver ele pergunta para outro nó da névoa se aquele posto que está associado a ele tem vagas
+
+![3.jpeg](https://github.com/mauriciomuniz/carregamento-inteligente-de-veiculos-eletricos/blob/main/img/1.jpeg)
+
+A busca de postos nos nós da névoa foi feita usando uma lista circular, de como que sempre quando não encontrado vagas, ela vai perguntar no elemento seguinte se tem vagas, esse processo é feito até que não reste vagas
+
+![5.jpeg](https://github.com/mauriciomuniz/carregamento-inteligente-de-veiculos-eletricos/blob/main/img/1.jpeg)
 #### 4. Intruções
 ##### 4.1 Clonar repositório
 ```
