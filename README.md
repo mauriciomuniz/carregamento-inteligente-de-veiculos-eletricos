@@ -34,19 +34,19 @@ Essa imagem é uma representação gráfica de como foi pensado o posto.
 
 O sistema foi pensado da seguinte forma: temos um servidor central que é nossa núvem, e os brokers, que são mais do que brokers pois realizam algumas operações, esses assumem o papel da nossa névoa. Nos brokers temos informações que chegam dos carros e postos, essa comunicação é feita usando o protocolo mqtt. Os carros perguntam para o broker se o posto que está associado a ele tem vaga. O servidor central se comporta como um servidor-cliente, ele está escutando e mandando mensagens para outros brokers, essa comunicação é feita usando uma comunicação tcp com sockets.
 
-![2.jpeg](https://github.com/mauriciomuniz/carregamento-inteligente-de-veiculos-eletricos/blob/main/img/1.jpeg)
+![2.jpeg](https://github.com/mauriciomuniz/carregamento-inteligente-de-veiculos-eletricos/blob/main/img/2.jpeg)
 
 Se não tiver vagas, a mensagem é passada para a núvem e ele pergunta para o próximo nó da névoa se os postos ali tem vaga, se tiver insere o carro e a informação e retornada.
 
-![4.jpeg](https://github.com/mauriciomuniz/carregamento-inteligente-de-veiculos-eletricos/blob/main/img/1.jpeg)
+![4.jpeg](https://github.com/mauriciomuniz/carregamento-inteligente-de-veiculos-eletricos/blob/main/img/4.jpeg)
 
 Se não tiver vagas novamente, ele pergunta para o outro próximo nó da névoa se aquele posto que está associado a ele tem vagas
 
-![3.jpeg](https://github.com/mauriciomuniz/carregamento-inteligente-de-veiculos-eletricos/blob/main/img/1.jpeg)
+![3.jpeg](https://github.com/mauriciomuniz/carregamento-inteligente-de-veiculos-eletricos/blob/main/img/3.jpeg)
 
 A busca de postos nos nós da névoa foi feita usando uma lista circular, de como que sempre quando não encontrado vagas, ela vai perguntar no elemento seguinte se tem vagas, esse processo é feito até que não reste vagas
 
-![5.jpeg](https://github.com/mauriciomuniz/carregamento-inteligente-de-veiculos-eletricos/blob/main/img/1.jpeg)
+![5.jpeg](https://github.com/mauriciomuniz/carregamento-inteligente-de-veiculos-eletricos/blob/main/img/5.jpeg)
 #### 4. Intruções
 ##### 4.1 Clonar repositório
 ```
